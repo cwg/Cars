@@ -9,7 +9,7 @@
  * The current problem is that we cannot get API data from either allianceautoauction.com or manheim.com and must log-in algorithmically to scrape the data instead of using a proper API key. We have this process working with Alliance but we are not getting authenticated properly at Manheim and are not able to log-in programatically yet like we can at Alliance. We need help resolving this issue.
  
 * This is a page to pre-sales data at Manheim in Dallas - This page will expire.
- https://www.manheim.com/members/presale/control/vehicleList?auctionID=DALA&saleDate=20201006&saleYear=2020&saleNumber=41&country=USA&locale=en_US&format=enhanced
+https://www.manheim.com/members/presale/control/vehicleList?auctionID=DALA&saleDate=20201006&saleYear=2020&saleNumber=41&country=USA&locale=en_US&format=enhanced
 
 * This is a  page to pre-sales data at Alliance in Waco - This page will expire.
 http://dealers.allianceautoauction.com/components/report/presale/event_list/alliwaco
