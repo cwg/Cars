@@ -1,10 +1,12 @@
 <?php
 /**
  * Plugin Name: Cars
- * Plugin URI: https://letusssellit.com
+ * Plugin URI: https://staging.tedpenner.com
  * Description: Get the latest pre-sales & post-sales car data from Manheim and Alliance for the Waco region.
  * Rev Mon 2020.09.28 by TP @6:10 pm Central Time
  * Central Time Zone: https://time.is/CT
+ 
+ * The current problem is that we cannot get API data from either allianceautoauction.com or manheim.com and must log-in algorithmically to scrape the data instead of using a proper API key. We have this process working with Alliance but we are not getting authenticated properly at Manheim and are not able to log-in programatically yet like we can at Alliance. We need help resolving this issue.
  */
  
  /* hhb_inc.php is included here inline */
