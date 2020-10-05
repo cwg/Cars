@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Plugin Name: Cars
  * Plugin URI: https://staging.tedpenner.com
  * Description: Get the latest pre-sales & post-sales car data from Manheim and Alliance for the Waco region.
