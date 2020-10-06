@@ -5,7 +5,6 @@
  * Description: Get the latest pre-sales & post-sales car data from Manheim and Alliance for the Waco region.
  * Rev Mon 2020.09.28 by TP @6:10 pm Central Time
  * Central Time Zone: https://time.is/CT
- 
  * The current problem is that we cannot get API data from either allianceautoauction.com or manheim.com and must log-in algorithmically to scrape the data instead of using a proper API key. We have this process working with Alliance but we are not getting authenticated properly at Manheim and are not able to log-in programatically yet like we can at Alliance. We need help resolving this issue.
  
 * This is a page to pre-sales data at Manheim in Dallas - This page will expire.
@@ -1292,7 +1291,8 @@ function needInputVariables(array $variables, string $inputSources = 'P', array 
 	die ( $errstr );
 }
  /* end of hhb_inc.php file */
- 
+ define("DEBUG_VERBOSE", TRUE); //cwg flag to control messages
+
  	//call register settings function
 	add_action( 'admin_init', 'register_refresh_carsinfo_settings' );
 
@@ -2156,30 +2156,48 @@ return $vehicles;
 //. end of code from auto-login-final
 
 function refresh_alliance_button_action(){
+
     //login
     login_alliance();
 
     //get latest postsales data for waco region.
     $vehicles = fetch_latest_postsales_data_waco();
+	if (DEBUG_VERBOSE) {
+		echo 'fetched postsales data for alliance<br/>';
+		print_r($vehicles);
+	}
 	
+	//save the postsales cars for waco region, as a csv file
+	save_as_csv('postsales','test_cars_csv.csv',$vehicles);
+		if (DEBUG_VERBOSE) {
+		echo 'saved postsales data to csv for testing<br/>';
+	}
+
 	//get latest presales data for waco region - this might return an empty list if there is no upcoming auction.
 	$results = fetch_latest_presales_data_waco();
-
+	if (DEBUG_VERBOSE) {
+		echo 'fetched presales data for alliance<br/>';
+		print_r($vehicles);
+	}
 
     //display the retrieved cars
     //return displaypostsalestable($vehicles);
 	
-	//save the postsales cars for waco region, as a csv file
-	save_as_csv('postsales','test_cars_csv.csv',$vehicles);
 	
 	//save the presales cars for waco region, as a csv file 
 	save_as_csv('presales','test_presales_cars.csv',$results);
+		if (DEBUG_VERBOSE) {
+		echo 'saved presales data to csv for testing<br/>';
+	}
 	
 	//save both presales and postsales data into a single file.
 	//save_to_single_csv('postsales',$vehicles);
 	//save_to_single_csv('presales',$results);
 	
 	save_to_single_csv($results,$vehicles); //pass both presales and postsales,to be written to file.
+		if (DEBUG_VERBOSE) {
+		echo 'saved pre- and postsales data to csv for testing<br/>';
+	}
 	
 	//let user know work is done
 	echo '<p>Getting fresh Alliance data complete. It might take up to 15 minutes before any new data shows up in tablepress.</p>';
