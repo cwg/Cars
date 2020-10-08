@@ -1,6 +1,5 @@
 <?php
-/*
- * Plugin Name: Cars
+/* Plugin Name: Cars
  * Plugin URI: https://staging.tedpenner.com
  * Description: Get the latest pre-sales & post-sales car data from Manheim and Alliance for the Waco region.
  * Rev Mon 2020.09.28 by TP @6:10 pm Central Time
@@ -14,7 +13,21 @@ https://www.manheim.com/members/presale/control/vehicleList?auctionID=DALA&saleD
 http://dealers.allianceautoauction.com/components/report/presale/event_list/alliwaco
  
  */
- 
+/*
+ * CURRENT STATUS (please keep up to date if you edit the file)
+ *
+ * cwg updated 08oct20 1:40 pm Eastern time 
+ *
+ * We are working on the function do_manheim_login_stackoverflow()
+ *  this function is supposed to do the actual login in such a way that we can continue accessing the site and get data
+ *
+ * Apparently manheim requires an 'authenticity token' before the call to log in. When we go to the site we are supposed
+ *  to get that token and include it in the call to authenticate.
+ * I commented out the call that was generating a fatal error, and removed the token from the actual call to authenticate.
+ *  This let the code continue (thinking it had logged in correctly) but it is clear from the displayed page that it is not actually
+ *   logged in.
+ * See line 1704 for the actual code
+ */ 
  /* hhb_inc.php is included here inline */
 declare(strict_types = 1);
 /**
@@ -1292,6 +1305,7 @@ function needInputVariables(array $variables, string $inputSources = 'P', array 
 }
  /* end of hhb_inc.php file */
  define("DEBUG_VERBOSE", TRUE); //cwg flag to control messages
+ define("DEBUG_EXTRA_VERBOSE", FALSE); //cwg flag to control messages
 
  	//call register settings function
 	add_action( 'admin_init', 'register_refresh_carsinfo_settings' );
@@ -1643,26 +1657,71 @@ return  $response;
 /* helper function from stackoverflow */
 
 function do_manheim_login_stackoverflow() {
-		echo 'trying code from stackoverflow';
-
-hhb_init(); // better error reporting
-$username=get_option('refresh_manheim_user');
+	if (DEBUG_VERBOSE) {
+		echo 'trying login code from stackoverflow<br/>';
+	}    
+    $username=get_option('refresh_manheim_user');
 $password=get_option('refresh_manheim`_pw');
+    
+    $url = 'https://api.manheim.com/auth/authorization.oauth2?adaptor=manheim_customer&client_id=qdp6ewmug522t9umyxyqydnx&response_type=code&scope=openid&redirect_uri=https://members.manheim.com/gateway/callback';
+
+//authenticity_token = '';
+$data = array(
+	'username' => $username,
+	'password' => $password
+);
+/*
+$login_html = fetch_url($url,$data);
+    print_r($login_html);
+    die;
+if (strpos($login_html,"Welcome, ") == FALSE) {
+      echo '<p>Exception: login_alliance() - login failed</p>';
+      die;
+}
+*/
+hhb_init(); // better error reporting
+
 
 $hc = new hhb_curl ( '', true );
 
+	if (DEBUG_VERBOSE) {
+		echo 'got an hhb_curl instance <br/>';
+	}    
 
 // header ( "content-type: text/plain;charset=utf8" );
 $hc->exec ( 'https://www.manheim.com/' ); // getting a cookie session id
 
-$html = $hc->exec ( 'https://www.manheim.com/login/' )->getResponseBody (); // getting authenticity_token , required for logging in
+$html = $hc->exec ( 'https://api.manheim.com/auth/authorization.oauth2?adaptor=manheim_customer&client_id=qdp6ewmug522t9umyxyqydnx&response_type=code&scope=openid&redirect_uri=https://members.manheim.com/gateway/callback&back_uri=https://www.manheim.com/members/mymanheim/?classic=true' )->getResponseBody (); // getting authenticity_token , required for logging in
+	if (DEBUG_EXTRA_VERBOSE) {
+		echo 'api login call returned: <br/>';
+		hhb_var_dump ( $html, $hc->getStdErr (), $hc->getStdOut () );
+	}    
 $domd = @DOMDocument::loadHTML ( $html );
 $xp = new DOMXPath ( $domd );
-
+	if (DEBUG_EXTRA_VERBOSE) {
 hhb_var_dump ( $xp, $hc->getStdErr (), $hc->getStdOut () );
-
-/*
+	}
+/* THIS IS WHERE WE ARE STUCK
+ *   the $token line breaks this code
 $token = $xp->query ( '//input[@name="authenticity_token"]' )->item ( 0 )->getAttribute ( "value" );
+	if (DEBUG_VERBOSE) {
+		echo 'got $token <br/>';
+	}    
+*/
+
+$hc->setopt_array ( array (
+        CURLOPT_URL => 'https://www.manheim.com/login/authenticate',
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query ( array (
+                'utf8' => '✓',
+                'user' => array (
+                        'username' => $username,
+                        'password' => $password 
+                ),
+                'submit' => 'Login' 
+        ) ) 
+) )->exec ();
+/*
 $hc->setopt_array ( array (
         CURLOPT_URL => 'https://www.manheim.com/login/authenticate',
         CURLOPT_POST => true,
@@ -1676,16 +1735,18 @@ $hc->setopt_array ( array (
                 'submit' => 'Login' 
         ) ) 
 ) )->exec ();
+*/
 $html = $hc->getResponseBody ();
 $domd = @DOMDocument::loadHTML ( $html );
 $xp = new DOMXPath ( $domd );
 $errmsg = $xp->query ( '//*[contains(@class,"msgError")]' );
 if ($errmsg->length > 0) {
     echo 'Error logging in: ' . $errmsg->item ( 0 )->textContent;
+	return NULL;
 } else {
     echo 'logged in!';
+	return $html;
 }
-hhb_var_dump ( $token, $hc->getStdErr (), $hc->getStdOut () );
 /* */
 }
 /* */
